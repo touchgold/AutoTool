@@ -3,6 +3,9 @@ package com.tanjinc.autotool.utils;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AppOpsManager;
+import android.app.usage.UsageStats;
+import android.app.usage.UsageStatsManager;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
@@ -14,6 +17,7 @@ import android.util.Log;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.List;
 
 /**
  * Author by tanjincheng, Date on 18-11-30.
@@ -85,6 +89,37 @@ public class PermissionUtil {
         if (!isAccessibilitySettingsOn(activity, accessibilityServiceName)) {
             Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
             activity.startActivity(intent);
+        }
+    }
+
+    public static void checkUsageStateAccessPermission(Context context) {
+        if(!checkAppUsagePermission(context)) {
+            requestAppUsagePermission(context);
+        }
+    }
+
+    public static boolean checkAppUsagePermission(Context context) {
+        UsageStatsManager usageStatsManager = (UsageStatsManager) context.getSystemService(Context.USAGE_STATS_SERVICE);
+        if(usageStatsManager == null) {
+            return false;
+        }
+        long currentTime = System.currentTimeMillis();
+        // try to get app usage state in last 1 min
+        List<UsageStats> stats = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, currentTime - 60 * 1000, currentTime);
+        if (stats.size() == 0) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static void requestAppUsagePermission(Context context) {
+        Intent intent = new Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        try {
+            context.startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            Log.i(TAG,"Start usage access settings activity fail!");
         }
     }
 }

@@ -18,7 +18,7 @@ class SharePreferenceUtil {
 
         fun getBoolean(key: String) : Boolean {
             val sp  = MyApplication.getApplication().getSharedPreferences("auto_tool", Context.MODE_PRIVATE)
-            return sp.getBoolean(key, true)
+            return sp.getBoolean(key, false)
         }
     }
 }

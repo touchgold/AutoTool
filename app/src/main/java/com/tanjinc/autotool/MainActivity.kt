@@ -57,6 +57,13 @@ class MainActivity : AppCompatActivity() {
                 startQuToutiao()
             }
         }
+        readPaperBtn.setOnClickListener {
+            if (checkAccesibilityPermission()) {
+                cleanTask()
+                SharePreferenceUtil.putBoolean(Constants.PAPER_TASK, true)
+                startQuToutiao()
+            }
+        }
         cancelBtn.setOnClickListener {
             cleanTask()
         }
@@ -75,6 +82,9 @@ class MainActivity : AppCompatActivity() {
                 startQuToutiao()
             }
         }
+        yaoqingmaTv.setOnClickListener {
+
+        }
 
     }
 
@@ -89,6 +99,8 @@ class MainActivity : AppCompatActivity() {
         SharePreferenceUtil.putBoolean(Constants.SHIWAN_TASK, false)
         SharePreferenceUtil.putBoolean(Constants.QIANDAO_TASK, false)
         SharePreferenceUtil.putBoolean(Constants.VIDEO_TASK, false)
+
+        SharePreferenceUtil.putBoolean(Constants.PAPER_TASK, false)
 
     }
 
@@ -116,6 +128,8 @@ class MainActivity : AppCompatActivity() {
             launch(UI) {
                 permissionWarmTv.visibility = if (mIsPermissionGain) View.GONE else View.VISIBLE
             }
+
+            PermissionUtil.checkUsageStateAccessPermission(mActivity)
         }
 
     }

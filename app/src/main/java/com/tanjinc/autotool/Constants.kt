@@ -8,5 +8,6 @@ class Constants {
         public val QIANDAO_TASK = "qiandao_task"
         const val SHIWAN_TASK = "shiwan_task"
         const val VIDEO_TASK = "video_task"
+        const val PAPER_TASK = "paper_task"
     }
 }

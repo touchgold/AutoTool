@@ -16,11 +16,15 @@ import android.support.annotation.NonNull;
 import android.support.annotation.RequiresPermission;
 import android.util.Log;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import static android.Manifest.permission.KILL_BACKGROUND_PROCESSES;
 
@@ -33,6 +37,8 @@ import static android.Manifest.permission.KILL_BACKGROUND_PROCESSES;
  * </pre>
  */
 public final class ProcessUtils {
+    private static final String TAG = "ProcessUtils";
+    private static final String PACKAGE_NAME_UNKNOWN = "package_name_unknown";
 
     private ProcessUtils() {
         throw new UnsupportedOperationException("u can't instantiate me...");
@@ -113,6 +119,31 @@ public final class ProcessUtils {
         return "";
     }
 
+    public static String getTopActivityPackageName(@NonNull Context context) {
+        final UsageStatsManager usageStatsManager = (UsageStatsManager)context.getSystemService(Context.USAGE_STATS_SERVICE);
+        if(usageStatsManager == null) {
+            return PACKAGE_NAME_UNKNOWN;
+        }
+
+        String topActivityPackageName = PACKAGE_NAME_UNKNOWN;
+        long time = System.currentTimeMillis();
+        // 查询最后十秒钟使用应用统计数据
+        List<UsageStats> usageStatsList = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, time - 1000*10, time);
+        // 以最后使用时间为标准进行排序
+        if(usageStatsList != null) {
+            SortedMap<Long,UsageStats> sortedMap = new TreeMap<Long,UsageStats>();
+            for (UsageStats usageStats : usageStatsList) {
+                sortedMap.put(usageStats.getLastTimeUsed(),usageStats);
+            }
+            if(sortedMap.size() != 0) {
+                topActivityPackageName =  sortedMap.get(sortedMap.lastKey()).getPackageName();
+                Log.d(TAG,"Top activity package name = " + topActivityPackageName);
+            }
+        }
+
+        return topActivityPackageName;
+    }
+
     /**
      * Return all background processes.
      * <p>Must hold
@@ -135,6 +166,25 @@ public final class ProcessUtils {
         return set;
     }
 
+
+    public static boolean killProcessByPackageName(Context context, String packageName) {
+        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        Method forceStopPackage = null;
+        try {
+            forceStopPackage = am.getClass().getDeclaredMethod("forceStopPackage", String.class);
+            forceStopPackage.setAccessible(true);
+            forceStopPackage.invoke(am, packageName);
+            return true;
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
     /**
      * Kill all background processes.
      * <p>Must hold
@@ -144,8 +194,7 @@ public final class ProcessUtils {
      */
     @RequiresPermission(KILL_BACKGROUND_PROCESSES)
     public static Set<String> killAllBackgroundProcesses(Context context) {
-        ActivityManager am =
-                (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         //noinspection ConstantConditions
         List<ActivityManager.RunningAppProcessInfo> info = am.getRunningAppProcesses();
         Set<String> set = new HashSet<>();
