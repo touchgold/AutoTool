@@ -129,7 +129,7 @@ class MainActivity : AppCompatActivity() {
                 permissionWarmTv.visibility = if (mIsPermissionGain) View.GONE else View.VISIBLE
             }
 
-            PermissionUtil.checkUsageStateAccessPermission(mActivity)
+//            PermissionUtil.checkUsageStateAccessPermission(mActivity)
         }
 
     }

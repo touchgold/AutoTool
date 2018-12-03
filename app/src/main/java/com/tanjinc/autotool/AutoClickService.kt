@@ -290,7 +290,7 @@ class AutoClickService : AccessibilityService() {
                         mCurrentPaperIndex++
                         mHandler.sendEmptyMessageDelayed(MSG_SCROLL, 5 * 1000)
                         launch {
-                            delay(30 * 1000)
+                            delay(20 * 1000)
                             mHandler.removeMessages(MSG_SCROLL)
                             performGlobalAction(GLOBAL_ACTION_BACK)
                             mIsPaperTask = false
@@ -406,8 +406,6 @@ class AutoClickService : AccessibilityService() {
         } catch (e: Exception) {
             Log.e(TAG, e.toString())
         }
-        Log.d(TAG, "clickByText click fail $text")
-
         return false
     }
 
