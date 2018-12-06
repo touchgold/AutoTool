@@ -10,13 +10,13 @@ import android.view.accessibility.AccessibilityEvent;
  */
 public class PrintUtils {
     public static void log(CharSequence log) {
-        Log.i("PrintUtils", log + "");
+        Log.d("PrintUtils", log + "");
     }
 
     public static void printEvent(AccessibilityEvent event) {
         int eventType = event.getEventType();
         if (eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
-//            return;
+            return;
         }
         log("-------------------------------------------------------------");
         log("packageName:" + event.getPackageName() + "");

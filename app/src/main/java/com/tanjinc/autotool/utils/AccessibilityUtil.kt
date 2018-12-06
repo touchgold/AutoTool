@@ -10,13 +10,17 @@ import java.lang.Exception
  */
 class AccessibilityUtil {
     companion object {
-        
+        val TAG = "AccessibilityUtil"
          fun clickByNode(rootNodeInfo: AccessibilityNodeInfo?, nodeInfo: AccessibilityNodeInfo): Boolean {
-            if (nodeInfo.isClickable) {
-                return nodeInfo.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-            } else if (nodeInfo.parent != null){
-                return nodeInfo.parent.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-            }
+             try {
+                 if (nodeInfo.isClickable) {
+                     return nodeInfo.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                 } else if (nodeInfo.parent != null){
+                     return nodeInfo.parent.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                 }
+             } catch (e: Exception) {
+                 Log.e(TAG, e.toString())
+             }
             return false
         }
         fun clickByText(rootNodeInfo: AccessibilityNodeInfo?, text:String) :Boolean{
@@ -29,19 +33,21 @@ class AccessibilityUtil {
                 if(targetNodeInfo != null && targetNodeInfo.size> 0 ) {
                     for (i in 0 until targetNodeInfo.size) {
                         if (targetNodeInfo[i]?.text == text) {
-                            clicked = targetNodeInfo[i].performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                            if (targetNodeInfo[i].isClickable) {
+                                clicked = targetNodeInfo[i].performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                            }
                             if (!clicked) {
                                 clicked = targetNodeInfo[i]?.parent?.performAction(AccessibilityNodeInfo.ACTION_CLICK)!!
                             }
                             if (clicked) {
-                                Log.d(AutoClickService.TAG, "clickByText click success $text")
+                                Log.d(TAG, "clickByText click success $text")
                                 return true
                             }
                         }
                     }
                 }
             } catch (e: Exception) {
-                Log.e(AutoClickService.TAG, e.toString())
+                Log.e(TAG, e.toString())
             }
             return false
         }
@@ -89,7 +95,7 @@ class AccessibilityUtil {
                     var nodeI = rootNodeInfo.getChild(i)
                     if (nodeI != null) {
                         if (nodeI.className != null && nodeI.className.contains(text) && nodeI.isScrollable) {
-                            Log.d(AutoClickService.TAG, " findByViewName className= " + nodeI.className)
+                            Log.d(TAG, " findByViewName className= " + nodeI.className)
                             targetNodeInf = nodeI
                             break
                         } else {
@@ -117,7 +123,7 @@ class AccessibilityUtil {
                 var nodeI = rootNodeInfo.getChild(if(!end) i else rootNodeInfo.childCount - 1- i)
                 if (nodeI != null) {
                     if (nodeI.text != null && nodeI.text.contains(text) ) {
-                        Log.d(AutoClickService.TAG, " findByText success text= " + nodeI.text)
+                        Log.d(TAG, " findByText success text= " + nodeI.text)
                         textArray.add(nodeI)
                         break
                     } else {
@@ -138,7 +144,7 @@ class AccessibilityUtil {
                     var nodeI = rootNodeInfo.getChild(if(!end) i else rootNodeInfo.childCount - 1- i)
                     if (nodeI != null) {
                         if (nodeI.text != null && nodeI.text.contains(text) && !nodeI.text.contains(excText)) {
-                            Log.d(AutoClickService.TAG, " findByText success text= " + nodeI.text)
+//                            Log.d(TAG, " findByText success text= " + nodeI.text)
                             targetNodeInf = nodeI
                             break
                         } else {

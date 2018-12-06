@@ -6,8 +6,13 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.Message;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+
 
 public class Test extends Activity{
+    ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
     private void test() {
         startActivity(new Intent(this,WorkService.class));
         Intent intent = new Intent();

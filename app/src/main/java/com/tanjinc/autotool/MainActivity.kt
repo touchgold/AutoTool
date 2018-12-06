@@ -99,7 +99,6 @@ class MainActivity : AppCompatActivity() {
         SharePreferenceUtil.putBoolean(Constants.SHIWAN_TASK, false)
         SharePreferenceUtil.putBoolean(Constants.QIANDAO_TASK, false)
         SharePreferenceUtil.putBoolean(Constants.VIDEO_TASK, false)
-
         SharePreferenceUtil.putBoolean(Constants.PAPER_TASK, false)
 
     }

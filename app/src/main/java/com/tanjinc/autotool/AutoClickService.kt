@@ -26,6 +26,7 @@ import com.tanjinc.autotool.utils.SharePreferenceUtil
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
 import java.util.*
+import java.util.concurrent.Executors
 import kotlin.math.abs
 
 class AutoClickService : AccessibilityService() {
@@ -48,11 +49,14 @@ class AutoClickService : AccessibilityService() {
     val MSG_RETURN_QU = 101
     val MSG_KILL = 102
     val MSG_SCROLL = 103
-    val MSG_BACK = 104
+    val MSG_BACK_MAIN = 104
     val MSG_REFRESH_PAPER = 105
+    val MSG_DETAIL_LOOPER = 106
 
     private var mWebViewNode: AccessibilityNodeInfo ?= null
-
+    private var mRootViewNode: AccessibilityNodeInfo ?= null
+    private var mFirstPackageName:String ?= null
+    private var mRetryCount = 0
     private var mIsShowResent = false
     private val mHandler = @SuppressLint("HandlerLeak")
     object : Handler() {
@@ -81,24 +85,47 @@ class AutoClickService : AccessibilityService() {
                     sendEmptyMessageDelayed(MSG_SCROLL, Random().nextInt(5) * 1000L)
                     Log.d(TAG, "scroll ...")
                 }
-                MSG_BACK -> {
-                    mLoading = true
-                    mWebViewNode = null
-                    removeMessages(MSG_SCROLL)
-                    performGlobalAction(GLOBAL_ACTION_BACK)
-                    Log.d(TAG, "readPaperTask back to main")
-                    Thread{
-                        Thread.sleep(2 * 1000)
-                        clickByText(rootInActiveWindow,"刷新")
-                        Thread.sleep(3 * 1000)
+                MSG_BACK_MAIN -> {
+                    if (mTaskStack.size > 0) {
+                        Log.d(TAG, "mainPage enter 1")
                         mIsPaperTask = false
-                        Log.d(TAG, "readPaperTask refresh, ok, $mLoading")
-                        readPaperTask(rootInActiveWindow)
-                    }.start()
+                        mRetryCount = 0
+                        removeMessages(MSG_BACK_MAIN)
+                        mainPage()
+                        return
+                    }
+                    val recyclerNode = findByViewName(rootInActiveWindow, "android.support.v7.widget.RecyclerView")
+                    if (recyclerNode != null && recyclerNode.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)) {
+                        Log.d(TAG, "mainPage scroll success")
+                        Log.d(TAG, "mainPage enter 2")
+                        mIsPaperTask = false
+                        mainPage()
+                        mRetryCount = 0
+                        removeMessages(MSG_BACK_MAIN)
+                    } else {
+//                        Log.d(TAG, "mainPage scroll fail retry")
+                        mRetryCount++
+                        if (mRetryCount > 5) {
+                            if (!clickByText(mRootViewNode,"刷新")) {
+                                Log.d(TAG, "mainPage click k9")
+                                clickById(rootInActiveWindow, "com.jifen.qukan:id/k9")
+                                performGlobalAction(GLOBAL_ACTION_BACK)
+                            }
+                            sendEmptyMessageDelayed(MSG_BACK_MAIN, 5 * 1000)
+                            mRetryCount = 0
+                        }
+                        removeMessages(MSG_BACK_MAIN)
+                        sendEmptyMessageDelayed(MSG_BACK_MAIN, 2 * 1000)
+
+                    }
                 }
                 MSG_REFRESH_PAPER -> {
                     refresh()
                 }
+                MSG_DETAIL_LOOPER -> {
+                    detailLoop()
+                }
+
             }
         }
     }
@@ -128,9 +155,17 @@ class AutoClickService : AccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         PrintUtils.printEvent(event)
-        var rootInActiveWindow = rootInActiveWindow
-        if(event == null || rootInActiveWindow == null) {
+        mRootViewNode = rootInActiveWindow
+        if(event == null) {
             return
+        }
+        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            if (event.packageName != "com.jifen.qukan" && mFirstPackageName == "com.jifen.qukan") {
+                mHandler.removeCallbacksAndMessages(null)
+                mStopFlag = true
+                mIsPaperTask = false
+            }
+            mFirstPackageName = event.packageName.toString()
         }
         when(event.packageName) {
             QutoutiaoPackage -> {
@@ -182,6 +217,11 @@ class AutoClickService : AccessibilityService() {
                                 return
                             }
                             clickByText(rootInActiveWindow,"进行中...")
+                            clickByText(rootInActiveWindow,"立即试玩")
+                            installTask()
+                            if (!clickByText(rootInActiveWindow,"领取奖励")) {
+                                findByText(rootInActiveWindow, "打开", "null", true)?.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                            }
 
                             val webNodeInfo = findByViewName(rootInActiveWindow, "android.webkit.WebView")
                             if (webNodeInfo!= null && webNodeInfo.isScrollable && !mIsScrollIng) {
@@ -202,11 +242,6 @@ class AutoClickService : AccessibilityService() {
                         }
 
 
-                        clickByText(rootInActiveWindow,"立即试玩")
-                        installTask()
-                        if (!clickByText(rootInActiveWindow,"领取奖励")) {
-                            findByText(rootInActiveWindow, "打开", "null", true)?.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-                        }
 
                         if (SharePreferenceUtil.getBoolean(Constants.QIANDAO_TASK)) {
                             recommendAppTask()
@@ -238,12 +273,11 @@ class AutoClickService : AccessibilityService() {
                     }
                 }
 
-                if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ) {
+                if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED || !mIsPaperTask) {
                     //看文章
-//                    if (SharePreferenceUtil.getBoolean(Constants.PAPER_TASK)) {
-//                        readPaperTask(rootInActiveWindow)
-//                        return
-//                    }
+                    if (SharePreferenceUtil.getBoolean(Constants.PAPER_TASK)) {
+                        readPaperTask(rootInActiveWindow)
+                    }
                 }
 
                 rootInActiveWindow?.recycle()
@@ -280,41 +314,18 @@ class AutoClickService : AccessibilityService() {
     private var mIsPaperTask = false
     var mPaperArray = mutableListOf<AccessibilityNodeInfo>()
     var mVideoArray = mutableListOf<AccessibilityNodeInfo>()
-
-    private var mCurrentPaperIndex = 0;
-    private var mLoading = false
+    private var mTaskStack: Stack<AccessibilityNodeInfo> = Stack()
     private fun readPaperTask(rootNodeInfo: AccessibilityNodeInfo?) {
+        Log.d(TAG, "readPaperTask mTaskStack.size = " + mTaskStack.size)
+        mainPage()
+    }
 
-        Log.d(TAG, "readPaperTask ")
-//        clickByText(rootInActiveWindow,"头条")
-//        if (mLoading) {
-//            Log.d(TAG, "readPaperTask isloading")
-//            return
-//        }
-        if (mIsPaperTask) {
-            //进入详情页
-            mWebViewNode = findByViewName(rootInActiveWindow, "android.webkit.WebView")
-            if (mWebViewNode != null) {
-                Log.d(TAG, "readPaperTask enter to detail")
-                Thread {
-                    for (i in 0..6) {
-                        Thread.sleep(5 * 1000)
-                        mWebViewNode?.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
-                        Log.d(TAG, "readPaperTask detail scroll... $i")
-
-                    }
-                    Thread.sleep(2 * 1000)
-                    performGlobalAction(GLOBAL_ACTION_BACK)
-
-                }.start()
-                return
-            } else {
-                Log.d(TAG, "readPaperTask back to Main")
-            }
-
-        }
-        if (mPaperArray.size == 0) {
+    private var lastNode :AccessibilityNodeInfo ?= null
+    private fun mainPage() {
+        Log.d(TAG, "mainPage taskStack.size=" + mTaskStack.size)
+        if (mTaskStack.size == 0) {
             mVideoArray.clear()
+            mPaperArray.clear()
             findTextArray(rootInActiveWindow, "评", mPaperArray)
             findTextArray(rootInActiveWindow, "视频", mVideoArray)
             for (videoItem in mVideoArray) {
@@ -333,52 +344,67 @@ class AutoClickService : AccessibilityService() {
                     mPaperArray.removeAt(removeIndex)
                 }
             }
+
+
             if (mPaperArray.size == 0) {
-                clickByText(rootInActiveWindow,"刷新")
+                mHandler.sendEmptyMessageDelayed(MSG_BACK_MAIN, 3 * 1000)
                 return
             }
+            if (mPaperArray[0] == lastNode) {
+                clickByText(rootInActiveWindow,"刷新")
+                mHandler.sendEmptyMessageDelayed(MSG_BACK_MAIN, 3 * 1000)
+                return
+            }
+            lastNode = mPaperArray[0]
             for (item in mPaperArray) {
                 Log.d(TAG, "readPaperTask " + item.text)
+                mTaskStack.push(item)
             }
+            mIsPaperTask = false
         }
 
-//        if (mPaperArray.size > 0 && mCurrentPaperIndex < mPaperArray.size) {
-//            var item = mPaperArray[mCurrentPaperIndex]
-//            mIsPaperTask = clickByNode(rootInActiveWindow, item)
-//            mCurrentPaperIndex++
-//        }
+        while (!mIsPaperTask && mTaskStack.size > 0) {
+            var taskItem = mTaskStack.pop()
+            mIsPaperTask = clickByNode(rootInActiveWindow, taskItem)
+            if (mIsPaperTask) {
+                Log.d(TAG, "enter " + taskItem.text)
+                mHandler.removeMessages(MSG_DETAIL_LOOPER)
+                mHandler.sendEmptyMessageDelayed(MSG_DETAIL_LOOPER, 500)
+                break
+            }
+            Log.d(TAG, "clickNode false " + taskItem.text)
+        }
+        if (!mIsPaperTask) {
+            mHandler.sendEmptyMessageDelayed(MSG_BACK_MAIN, 500)
+        }
+    }
 
-//        if (mPaperArray.size > 0) {
-//            if (mCurrentPaperIndex < mPaperArray.size) {
-//                var item = mPaperArray[mCurrentPaperIndex]
-//                if (!mIsPaperTask) {
-//                    mIsPaperTask = clickByNode(rootInActiveWindow, item)
-//                    Log.d(TAG, "readPaperTask $mIsPaperTask click "+ item.text )
-//                    if (mIsPaperTask) {
-//                        Log.d(TAG, "readPaperTask enter detail "+ item.text)
-////
-////                        mHandler.sendEmptyMessageDelayed(MSG_SCROLL, 5 * 1000)
-////                        mHandler.sendEmptyMessageDelayed(MSG_BACK, 20 * 1000)
-//                    } else {
-//
-//                    }
-//                    mCurrentPaperIndex++
-//                    if (mCurrentPaperIndex == mPaperArray.size) {
-//                        mIsPaperTask = false
-//                    }
-//                }
-//            } else {
-//                if (!mIsPaperTask) {
-//                    Log.d(TAG, "readPaperTask mCurrentPaperIndex=$mCurrentPaperIndex")
-//                    mPaperArray.clear()
-//                    mCurrentPaperIndex = 0
-//                    mLoading = true
-//
-//                    clickByText(rootInActiveWindow,"刷新")
-//                    mHandler.sendEmptyMessageDelayed(MSG_REFRESH_PAPER, 2 * 1000)
-//                }
-//            }
-//        }
+    private var mStopFlag = false
+    private var mSingleThreadExecutor = Executors.newSingleThreadExecutor()
+    private fun detailLoop() {
+        Log.d(TAG, "detailLoop  enter ... $mIsPaperTask")
+                //进入详情页
+
+        mStopFlag = false
+        mSingleThreadExecutor.execute{
+            Log.d(TAG, "detailLoop size 1 =" + mTaskStack.size)
+            Log.d(TAG, "detailLoop enter detail")
+            for (i in 0..3) {
+                Thread.sleep(3 * 1000)
+                if (mStopFlag) {
+                    Log.d(TAG, "detailLoop stopSelf")
+                    stopSelf()
+                }
+                mWebViewNode = findByViewName(rootInActiveWindow, "android.webkit.WebView")
+                mWebViewNode?.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+                Log.d(TAG, "detailLoop detail scroll... $i")
+
+            }
+            Thread.sleep(2 * 1000)
+            performGlobalAction(GLOBAL_ACTION_BACK)
+            mHandler.sendEmptyMessageDelayed(MSG_BACK_MAIN, 2 * 1000)
+            Log.d(TAG, "detailLoop GLOBAL_ACTION_BACK ....  ")
+        }
     }
 
     private fun refresh() {
