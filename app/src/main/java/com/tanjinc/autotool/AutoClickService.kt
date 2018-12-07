@@ -58,6 +58,7 @@ class AutoClickService : AccessibilityService() {
     private var mFirstPackageName:String ?= null
     private var mRetryCount = 0
     private var mIsShowResent = false
+    private var mIsInToutiaoProcess = false
     private val mHandler = @SuppressLint("HandlerLeak")
     object : Handler() {
         override fun handleMessage(msg: Message) {
@@ -86,6 +87,11 @@ class AutoClickService : AccessibilityService() {
                     Log.d(TAG, "scroll ...")
                 }
                 MSG_BACK_MAIN -> {
+                    if (!mIsInToutiaoProcess) {
+                        removeCallbacksAndMessages(null)
+                        mRetryCount = 0
+                        return
+                    }
                     if (mTaskStack.size > 0) {
                         Log.d(TAG, "mainPage enter 1")
                         mIsPaperTask = false
@@ -116,7 +122,6 @@ class AutoClickService : AccessibilityService() {
                         }
                         removeMessages(MSG_BACK_MAIN)
                         sendEmptyMessageDelayed(MSG_BACK_MAIN, 2 * 1000)
-
                     }
                 }
                 MSG_REFRESH_PAPER -> {
@@ -165,6 +170,7 @@ class AutoClickService : AccessibilityService() {
                 mStopFlag = true
                 mIsPaperTask = false
             }
+            mIsInToutiaoProcess = (event.packageName == "com.jifen.qukan")
             mFirstPackageName = event.packageName.toString()
         }
         when(event.packageName) {
@@ -188,7 +194,9 @@ class AutoClickService : AccessibilityService() {
                             }
                         }
                     }
-                    AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
+                    AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ->
+
+                    {
                         timeReward()
                         closeAdDialog()
 
@@ -311,9 +319,9 @@ class AutoClickService : AccessibilityService() {
 
     }
 
+
+
     private var mIsPaperTask = false
-    var mPaperArray = mutableListOf<AccessibilityNodeInfo>()
-    var mVideoArray = mutableListOf<AccessibilityNodeInfo>()
     private var mTaskStack: Stack<AccessibilityNodeInfo> = Stack()
     private fun readPaperTask(rootNodeInfo: AccessibilityNodeInfo?) {
         Log.d(TAG, "readPaperTask mTaskStack.size = " + mTaskStack.size)
@@ -323,40 +331,64 @@ class AutoClickService : AccessibilityService() {
     private var lastNode :AccessibilityNodeInfo ?= null
     private fun mainPage() {
         Log.d(TAG, "mainPage taskStack.size=" + mTaskStack.size)
-        if (mTaskStack.size == 0) {
-            mVideoArray.clear()
-            mPaperArray.clear()
-            findTextArray(rootInActiveWindow, "评", mPaperArray)
-            findTextArray(rootInActiveWindow, "视频", mVideoArray)
-            for (videoItem in mVideoArray) {
+        if (!mIsPaperTask && mTaskStack.size == 0) {
+            var paperArray = mutableListOf<AccessibilityNodeInfo>()
+            var videoArray = mutableListOf<AccessibilityNodeInfo>()
+            var zhidingArray = mutableListOf<AccessibilityNodeInfo>()
+
+            val regex = Regex("[0-9]+评")
+            val regex2 = Regex("视频")
+            val regex3 = Regex("置顶")
+            findTextArray(rootInActiveWindow, "评", regex,  paperArray)
+            findTextArray(rootInActiveWindow, "视频",regex2, videoArray ,true)
+            findTextArray(rootInActiveWindow, "置顶",regex3, zhidingArray, true)
+
+            for (videoItem in videoArray) {
                 var videoRect = Rect()
                 videoItem.getBoundsInScreen(videoRect)
                 var removeIndex = -1
-                for (i in 0 until mPaperArray.size) {
+                for (i in 0 until paperArray.size) {
                     var textRect = Rect()
-                    mPaperArray[i].getBoundsInScreen(textRect)
+                    paperArray[i].getBoundsInScreen(textRect)
                     if (abs(videoRect.top - textRect.top) < 10) {
                         removeIndex = i
                     }
                 }
                 if (removeIndex != -1) {
-                    Log.d(TAG, "readPaperTask remove" + mPaperArray[removeIndex].text)
-                    mPaperArray.removeAt(removeIndex)
+                    Log.d(TAG, "readPaperTask remove　视频　" + paperArray[removeIndex].text)
+                    paperArray.removeAt(removeIndex)
+                }
+            }
+
+            for (zhiDingItem in zhidingArray) {
+                val zhiDingRect = Rect()
+                zhiDingItem.getBoundsInScreen(zhiDingRect)
+                var removeIndex = -1
+                for (i in 0 until paperArray.size) {
+                    var textRect = Rect()
+                    paperArray[i].getBoundsInScreen(textRect)
+                    if (abs(zhiDingRect.top - textRect.top) < 10) {
+                        removeIndex = i
+                    }
+                }
+                if (removeIndex != -1) {
+                    Log.d(TAG, "readPaperTask remove　置顶　" + paperArray[removeIndex].text)
+                    paperArray.removeAt(removeIndex)
                 }
             }
 
 
-            if (mPaperArray.size == 0) {
+            if (paperArray.size == 0) {
                 mHandler.sendEmptyMessageDelayed(MSG_BACK_MAIN, 3 * 1000)
                 return
             }
-            if (mPaperArray[0] == lastNode) {
+            if (paperArray[0] == lastNode) {
                 clickByText(rootInActiveWindow,"刷新")
                 mHandler.sendEmptyMessageDelayed(MSG_BACK_MAIN, 3 * 1000)
                 return
             }
-            lastNode = mPaperArray[0]
-            for (item in mPaperArray) {
+            lastNode = paperArray[0]
+            for (item in paperArray) {
                 Log.d(TAG, "readPaperTask " + item.text)
                 mTaskStack.push(item)
             }
@@ -379,6 +411,7 @@ class AutoClickService : AccessibilityService() {
         }
     }
 
+
     private var mStopFlag = false
     private var mSingleThreadExecutor = Executors.newSingleThreadExecutor()
     private fun detailLoop() {
@@ -390,7 +423,7 @@ class AutoClickService : AccessibilityService() {
             Log.d(TAG, "detailLoop size 1 =" + mTaskStack.size)
             Log.d(TAG, "detailLoop enter detail")
             for (i in 0..3) {
-                Thread.sleep(3 * 1000)
+                Thread.sleep(2 * 1000)
                 if (mStopFlag) {
                     Log.d(TAG, "detailLoop stopSelf")
                     stopSelf()

@@ -23,7 +23,7 @@ class AccessibilityUtil {
              }
             return false
         }
-        fun clickByText(rootNodeInfo: AccessibilityNodeInfo?, text:String) :Boolean{
+        fun clickByText(rootNodeInfo: AccessibilityNodeInfo?, text:String, strict: Boolean = false) :Boolean{
             if (rootNodeInfo == null) {
                 return false
             }
@@ -114,7 +114,7 @@ class AccessibilityUtil {
         }
 
 
-         fun findTextArray(rootNodeInfo: AccessibilityNodeInfo?, text: String, textArray: MutableList<AccessibilityNodeInfo>, end:Boolean = false){
+         fun findTextArray(rootNodeInfo: AccessibilityNodeInfo?, text: String, regex: Regex,textArray: MutableList<AccessibilityNodeInfo>, end:Boolean = false, strict:Boolean= false){
             if (rootNodeInfo == null) {
                 return
             }
@@ -122,34 +122,56 @@ class AccessibilityUtil {
             for (i in 0 until rootNodeInfo.childCount) {
                 var nodeI = rootNodeInfo.getChild(if(!end) i else rootNodeInfo.childCount - 1- i)
                 if (nodeI != null) {
-                    if (nodeI.text != null && nodeI.text.contains(text) ) {
-                        Log.d(TAG, " findByText success text= " + nodeI.text)
-                        textArray.add(nodeI)
-                        break
+
+                    if (strict) {
+                        if (nodeI.text != null && nodeI.text.contains(regex) ) {
+                            Log.d(TAG, " findByText regex success text= " + nodeI.text)
+                            textArray.add(nodeI)
+                            break
+                        } else {
+                            findTextArray(nodeI, text, regex, textArray, end)
+                        }
                     } else {
-                        findTextArray(nodeI, text, textArray, end)
+                        if (nodeI.text != null && nodeI.text.matches(regex) ) {
+                            Log.d(TAG, " findByText regex success text= " + nodeI.text)
+                            textArray.add(nodeI)
+                            break
+                        } else {
+                            findTextArray(nodeI, text, regex, textArray, end)
+                        }
                     }
                 }
             }
         }
         //遍历查找
-         fun findByText(rootNodeInfo: AccessibilityNodeInfo?, text: String, excText:String = "null", end:Boolean = false) : AccessibilityNodeInfo?{
+         fun findByText(rootNodeInfo: AccessibilityNodeInfo?, text: String, excText:String = "null", end:Boolean = false, strict: Boolean = false) : AccessibilityNodeInfo?{
             if (rootNodeInfo == null) {
                 return null
             }
+            val regex = Regex("置顶")
+
             var targetNodeInf:AccessibilityNodeInfo ?= null
             try {
 
                 for (i in 0 until rootNodeInfo.childCount) {
                     var nodeI = rootNodeInfo.getChild(if(!end) i else rootNodeInfo.childCount - 1- i)
                     if (nodeI != null) {
-                        if (nodeI.text != null && nodeI.text.contains(text) && !nodeI.text.contains(excText)) {
-//                            Log.d(TAG, " findByText success text= " + nodeI.text)
-                            targetNodeInf = nodeI
-                            break
+                        if (strict) {
+                            if (nodeI.text != null && nodeI.text.matches(regex)) {
+                                targetNodeInf = nodeI
+                                break
+                            } else {
+                                targetNodeInf = findByText(nodeI, text, excText)
+                            }
                         } else {
-                            targetNodeInf = findByText(nodeI, text, excText)
+                            if (nodeI.text != null && nodeI.text.contains(text) && !nodeI.text.contains(excText)) {
+                                targetNodeInf = nodeI
+                                break
+                            } else {
+                                targetNodeInf = findByText(nodeI, text, excText)
+                            }
                         }
+
                     }
                     if (targetNodeInf != null) {
                         return targetNodeInf
