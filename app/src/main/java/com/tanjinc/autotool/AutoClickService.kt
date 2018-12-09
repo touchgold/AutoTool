@@ -418,8 +418,8 @@ class AutoClickService : AccessibilityService() {
         mSingleThreadExecutor.execute{
             Log.d(TAG, "detailLoop size 1 =" + mTaskStack.size)
             Log.d(TAG, "detailLoop enter detail")
-            for (i in 0..2) {
-                Thread.sleep(2 * 1000)
+            for (i in 0..5) {
+                Thread.sleep(4 * 1000)
                 if (mStopFlag) {
                     Log.d(TAG, "detailLoop stopSelf")
                     stopSelf()
