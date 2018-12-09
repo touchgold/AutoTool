@@ -1,5 +1,6 @@
 package com.tanjinc.autotool.utils
 
+import android.text.TextUtils
 import android.util.Log
 import android.view.accessibility.AccessibilityNodeInfo
 import com.tanjinc.autotool.AutoClickService
@@ -113,6 +114,37 @@ class AccessibilityUtil {
             return targetNodeInf
         }
 
+        fun findTextArray(rootNodeInfo: AccessibilityNodeInfo?, regex: Regex,textArray: MutableList<AccessibilityNodeInfo>, strict:Boolean = false){
+            if (rootNodeInfo == null) {
+                return
+            }
+
+            for (i in 0 until rootNodeInfo.childCount) {
+                var nodeI = rootNodeInfo.getChild(rootNodeInfo.childCount - 1- i)
+                if (nodeI == null) {
+                    continue
+                }
+                if (TextUtils.isEmpty(nodeI.text)) {
+                    findTextArray(nodeI, regex, textArray, strict)
+                } else {
+                    if (strict) {
+                        if (nodeI.text.matches(regex)) {
+                            Log.d(TAG, " findByText regex success text= " + nodeI.text)
+                            textArray.add(nodeI)
+                        } else {
+                            findTextArray(nodeI, regex, textArray, strict)
+                        }
+                    } else {
+                        if (nodeI.text.contains(regex) ) {
+                            Log.d(TAG, " findByText contains success text2= " + nodeI.text)
+                            textArray.add(nodeI)
+                        } else {
+                            findTextArray(nodeI, regex, textArray, strict)
+                        }
+                    }
+                }
+            }
+        }
 
          fun findTextArray(rootNodeInfo: AccessibilityNodeInfo?, text: String, regex: Regex,textArray: MutableList<AccessibilityNodeInfo>, end:Boolean = false, strict:Boolean= false){
             if (rootNodeInfo == null) {
@@ -133,7 +165,7 @@ class AccessibilityUtil {
                         }
                     } else {
                         if (nodeI.text != null && nodeI.text.matches(regex) ) {
-                            Log.d(TAG, " findByText regex success text= " + nodeI.text)
+                            Log.d(TAG, " findByText regex success text2= " + nodeI.text)
                             textArray.add(nodeI)
                             break
                         } else {

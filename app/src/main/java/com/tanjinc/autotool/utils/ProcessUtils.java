@@ -16,6 +16,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.RequiresPermission;
 import android.util.Log;
 
+import com.tanjinc.autotool.MyApplication;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -271,5 +273,18 @@ public final class ProcessUtils {
             }
         }
         return "";
+    }
+
+    public static boolean startQutoutiao() {
+        try {
+            Intent intent = new Intent();
+            intent.setClassName("com.jifen.qukan", "com.jifen.qkbase.main.MainActivity");
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            MyApplication.Companion.getApplication().startActivity(intent);
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "" + e);
+        }
+        return false;
     }
 }

@@ -92,11 +92,11 @@
             android:id="@+id/testBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/btn_bg"
+            android:background="@drawable/btn_bg2"
             android:textColor="#FFF"
             android:layout_margin="5dp"
-            android:visibility="gone"
-            android:text="test"/>
+            android:visibility="visible"
+            android:text="设置允许后台"/>
 
         <TextView
             android:id="@+id/tip"

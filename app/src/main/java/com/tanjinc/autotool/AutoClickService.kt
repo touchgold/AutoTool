@@ -55,6 +55,7 @@ class AutoClickService : AccessibilityService() {
 
     private var mWebViewNode: AccessibilityNodeInfo ?= null
     private var mRootViewNode: AccessibilityNodeInfo ?= null
+
     private var mFirstPackageName:String ?= null
     private var mRetryCount = 0
     private var mIsShowResent = false
@@ -160,10 +161,14 @@ class AutoClickService : AccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         PrintUtils.printEvent(event)
-        mRootViewNode = rootInActiveWindow
-        if(event == null) {
+        if(event == null || rootInActiveWindow == null) {
             return
         }
+        mRootViewNode = rootInActiveWindow
+        if (SharePreferenceUtil.getBoolean(Constants.SHIWAN_TASK)) {
+            InstallDialogHelper.autoInstall(this, mRootViewNode, event)
+        }
+
         if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             if (event.packageName != "com.jifen.qukan" && mFirstPackageName == "com.jifen.qukan") {
                 mHandler.removeCallbacksAndMessages(null)
@@ -194,9 +199,7 @@ class AutoClickService : AccessibilityService() {
                             }
                         }
                     }
-                    AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ->
-
-                    {
+                    AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
                         timeReward()
                         closeAdDialog()
 
@@ -225,28 +228,30 @@ class AutoClickService : AccessibilityService() {
                                 return
                             }
                             clickByText(rootInActiveWindow,"进行中...")
-                            clickByText(rootInActiveWindow,"立即试玩")
-                            installTask()
-                            if (!clickByText(rootInActiveWindow,"领取奖励")) {
-                                findByText(rootInActiveWindow, "打开", "null", true)?.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-                            }
-
-                            val webNodeInfo = findByViewName(rootInActiveWindow, "android.webkit.WebView")
-                            if (webNodeInfo!= null && webNodeInfo.isScrollable && !mIsScrollIng) {
-                                launch {
-
-                                    mIsScrollIng = true
-                                    var i = 0
-                                    while ( i < 5) {
-                                        webNodeInfo.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
-                                        delay(Random().nextInt(10) * 1000)
-                                        i++
-                                    }
-
-                                    performGlobalAction(GLOBAL_ACTION_BACK)
-                                    mIsScrollIng = false
-                                }
-                            }
+//                            InstallDialogHelper.reset()
+                            InstallDialogHelper.autoInstall(this, rootInActiveWindow, event)
+//                            clickByText(rootInActiveWindow,"立即试玩")
+//                            installTask()
+//                            if (!clickByText(rootInActiveWindow,"领取奖励")) {
+//                                findByText(rootInActiveWindow, "打开", "null", true)?.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+//                            }
+//
+//                            val webNodeInfo = findByViewName(rootInActiveWindow, "android.webkit.WebView")
+//                            if (webNodeInfo!= null && webNodeInfo.isScrollable && !mIsScrollIng) {
+//                                launch {
+//
+//                                    mIsScrollIng = true
+//                                    var i = 0
+//                                    while ( i < 5) {
+//                                        webNodeInfo.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+//                                        delay(Random().nextInt(10) * 1000)
+//                                        i++
+//                                    }
+//
+//                                    performGlobalAction(GLOBAL_ACTION_BACK)
+//                                    mIsScrollIng = false
+//                                }
+//                            }
                         }
 
 
@@ -290,12 +295,6 @@ class AutoClickService : AccessibilityService() {
 
                 rootInActiveWindow?.recycle()
             }
-            "com.tanjinc.autotool" -> {
-                val nodeArray = rootInActiveWindow.findAccessibilityNodeInfosByViewId("$mTargetPackageName:id/testBtn")
-                if (nodeArray.size > 0) {
-                    nodeArray[0].performAction(AccessibilityNodeInfo.ACTION_CLICK)
-                }
-            }
             "com.android.packageinstaller" ->  installTask()
             "com.samsung.android.packageinstaller" -> installTask()
             "com.android.systemui" -> {
@@ -336,12 +335,9 @@ class AutoClickService : AccessibilityService() {
             var videoArray = mutableListOf<AccessibilityNodeInfo>()
             var zhidingArray = mutableListOf<AccessibilityNodeInfo>()
 
-            val regex = Regex("[0-9]+评")
-            val regex2 = Regex("视频")
-            val regex3 = Regex("置顶")
-            findTextArray(rootInActiveWindow, "评", regex,  paperArray)
-            findTextArray(rootInActiveWindow, "视频",regex2, videoArray ,true)
-            findTextArray(rootInActiveWindow, "置顶",regex3, zhidingArray, true)
+            findTextArray(rootInActiveWindow, Regex("[0-9]+评"),  paperArray)
+            findTextArray(rootInActiveWindow, Regex("视频"), videoArray, true)
+            findTextArray(rootInActiveWindow, Regex("置顶"), zhidingArray, true)
 
             for (videoItem in videoArray) {
                 var videoRect = Rect()
@@ -422,7 +418,7 @@ class AutoClickService : AccessibilityService() {
         mSingleThreadExecutor.execute{
             Log.d(TAG, "detailLoop size 1 =" + mTaskStack.size)
             Log.d(TAG, "detailLoop enter detail")
-            for (i in 0..3) {
+            for (i in 0..2) {
                 Thread.sleep(2 * 1000)
                 if (mStopFlag) {
                     Log.d(TAG, "detailLoop stopSelf")
@@ -471,18 +467,18 @@ class AutoClickService : AccessibilityService() {
         stringBuffer.append("\n")
     }
     private fun installTask() : Boolean{
-        if ( clickByText(rootInActiveWindow,"完成") ||
-                clickByText(rootInActiveWindow,"安装") ||
-                clickByText(rootInActiveWindow,"确认") ||
-                clickByText(rootInActiveWindow,"继续") ||
-                clickByText(rootInActiveWindow,"下一步") ||
-                clickById(rootInActiveWindow, "com.android.packageinstaller:id/decide_to_continue") ||
-                clickById(rootInActiveWindow, "com.android.packageinstaller:id/action_positive") ||
-                clickByText(rootInActiveWindow,"继续安装") ||
-                clickByText(rootInActiveWindow,"打开阅读")
-        ) {
-            return true
-        }
+//        if ( clickByText(rootInActiveWindow,"完成") ||
+//                clickByText(rootInActiveWindow,"安装") ||
+//                clickByText(rootInActiveWindow,"确认") ||
+//                clickByText(rootInActiveWindow,"继续") ||
+//                clickByText(rootInActiveWindow,"下一步") ||
+//                clickById(rootInActiveWindow, "com.android.packageinstaller:id/decide_to_continue") ||
+//                clickById(rootInActiveWindow, "com.android.packageinstaller:id/action_positive") ||
+//                clickByText(rootInActiveWindow,"继续安装") ||
+//                clickByText(rootInActiveWindow,"打开阅读")
+//        ) {
+//            return true
+//        }
         return false
     }
     //领取时段奖励

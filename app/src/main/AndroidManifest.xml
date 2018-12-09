@@ -36,7 +36,7 @@
                 android:resource="@xml/accessible_service_config" />
         </service>
 
-
+        <activity android:name="com.meizu.safe.permission.SmartBGActivity"/>
         <receiver android:name=".AlarmReceiver"/>
     </application>
 

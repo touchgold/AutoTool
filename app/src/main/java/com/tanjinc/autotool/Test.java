@@ -1,6 +1,7 @@
 package com.tanjinc.autotool;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
@@ -17,5 +18,15 @@ public class Test extends Activity{
         startActivity(new Intent(this,WorkService.class));
         Intent intent = new Intent();
         intent.setClassName("com.jifen.qukan", "com.jifen.qkbase.main.MainActivity");
+
+
     }
+
+    private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+        }
+    };
 }
+
