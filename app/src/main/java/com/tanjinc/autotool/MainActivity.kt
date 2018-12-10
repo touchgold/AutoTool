@@ -1,18 +1,19 @@
 package com.tanjinc.autotool
 
 import android.app.Activity
-import android.content.Context
+import android.content.*
 import android.media.projection.MediaProjectionManager
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import kotlinx.android.synthetic.main.activity_main.*
-import android.content.Intent
 import android.view.View
 import android.widget.Toast
 import com.tanjinc.autotool.utils.PermissionUtil
 import com.tanjinc.autotool.utils.SharePreferenceUtil
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
+import java.lang.Exception
 
 
 class MainActivity : AppCompatActivity() {
@@ -27,6 +28,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        val intentFilter = IntentFilter(MSG_START_QUTOUTIAO)
+        registerReceiver(mBroadcastReceiver, intentFilter)
 
         mActivity = this
         permissionWarmTv.setOnClickListener {
@@ -46,7 +50,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         testBtn.setOnClickListener {
-
+//            startBackground()
+            startQuToutiao()
 //            val isEnable = PermissionUtil.isNotificationEnabled(this)
 //            Toast.makeText(this, if(isEnable) "enable" else "not enable", Toast.LENGTH_SHORT).show()
         }
@@ -88,6 +93,11 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(mBroadcastReceiver)
+    }
+
 
     private fun checkAccesibilityPermission() : Boolean {
         if (!mIsPermissionGain) {
@@ -99,7 +109,6 @@ class MainActivity : AppCompatActivity() {
         SharePreferenceUtil.putBoolean(Constants.SHIWAN_TASK, false)
         SharePreferenceUtil.putBoolean(Constants.QIANDAO_TASK, false)
         SharePreferenceUtil.putBoolean(Constants.VIDEO_TASK, false)
-
         SharePreferenceUtil.putBoolean(Constants.PAPER_TASK, false)
 
     }
@@ -108,6 +117,7 @@ class MainActivity : AppCompatActivity() {
         if (!checkAccesibilityPermission()) {
             return
         }
+        Log.d(TAG, "startQuToutiao")
         val intent = Intent()
         intent.setClassName("com.jifen.qukan", "com.jifen.qkbase.main.MainActivity")
         startActivity(intent)
@@ -145,5 +155,28 @@ class MainActivity : AppCompatActivity() {
                 }
         }
 
+    }
+
+    private fun startBackground() {
+        try {
+            val intent = Intent("android.intent.action.MAIN")
+            intent.component = ComponentName("com.meizu.safe", "com.meizu.safe.permission.SmartBGActivity")
+            startActivity(intent)
+        } catch (e: Exception) {
+
+        }
+    }
+
+    private val mBroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            Log.d(TAG, "receive " + intent.action)
+            when(intent.action) {
+                MSG_START_QUTOUTIAO -> startQuToutiao()
+            }
+        }
+    }
+
+    companion object {
+        const val MSG_START_QUTOUTIAO = "start_activity"
     }
 }

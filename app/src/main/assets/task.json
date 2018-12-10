@@ -1,0 +1,32 @@
+{
+    "packageName":"",
+    "version":"",
+    "taskList":[
+        {
+            "taskName":"看文章",
+            "viewNode":[
+                {
+                    "text":"刷新",
+                    "viewId": "android/id",
+                    "delay": 1000,
+                    "click": true,
+                    "scroll": false
+                },
+                {
+                    "text":"刷新",
+                    "viewId": "android/id",
+                    "delay": 1000,
+                    "click": true,
+                    "scroll": false
+                },
+                {
+                    "text":"刷新",
+                    "viewId": "android/id",
+                    "delay": 1000,
+                    "click": true,
+                    "scroll": false
+                }
+            ]
+        }
+    ]
+}

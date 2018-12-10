@@ -10,12 +10,15 @@ import android.view.accessibility.AccessibilityEvent;
  */
 public class PrintUtils {
     public static void log(CharSequence log) {
-        Log.i("PrintUtils", log + "");
+        Log.d("PrintUtils", log + "");
     }
 
     public static void printEvent(AccessibilityEvent event) {
-        log("-------------------------------------------------------------");
         int eventType = event.getEventType();
+        if (eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
+            return;
+        }
+        log("-------------------------------------------------------------");
         log("packageName:" + event.getPackageName() + "");
 //        log("source class:" + event.getClassName() + "");
 //        log("event type(int):" + eventType + "");
@@ -37,7 +40,7 @@ public class PrintUtils {
                 log("event type:TYPE_GESTURE_DETECTION_END");
                 break;
             case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:
-                log("event type:TYPE_WINDOW_CONTENT_CHANGED");
+//                log("event type:TYPE_WINDOW_CONTENT_CHANGED");
                 break;
             case AccessibilityEvent.TYPE_VIEW_CLICKED:
                 log("event type:TYPE_VIEW_CLICKED");
