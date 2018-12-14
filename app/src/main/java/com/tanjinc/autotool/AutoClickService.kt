@@ -23,6 +23,7 @@ import com.tanjinc.autotool.utils.AccessibilityUtil.Companion.findTextArray
 import com.tanjinc.autotool.utils.PrintUtils
 import com.tanjinc.autotool.utils.ProcessUtils
 import com.tanjinc.autotool.utils.SharePreferenceUtil
+import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
 import java.util.*
@@ -64,6 +65,7 @@ class AutoClickService : AccessibilityService() {
     object : Handler() {
         override fun handleMessage(msg: Message) {
             super.handleMessage(msg)
+            Log.d(TAG, "handler = " + msg.what)
             when(msg.what) {
                 MSG_REFRESH_VIDEO -> {
                     if(clickByText(rootInActiveWindow,"刷新")) {
@@ -101,7 +103,7 @@ class AutoClickService : AccessibilityService() {
                         mainPage()
                         return
                     }
-                    val recyclerNode = findByClassName(rootInActiveWindow, "android.support.v7.widget.RecyclerView")
+                    val recyclerNode = findByClassName(rootInActiveWindow, "android.support.v7.widget.RecyclerView", true)
                     if (recyclerNode != null && recyclerNode.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)) {
                         Log.d(TAG, "mainPage scroll success")
                         Log.d(TAG, "mainPage enter 2")
@@ -417,7 +419,7 @@ class AutoClickService : AccessibilityService() {
     private fun detailLoop() {
         Log.d(TAG, "detailLoop  enter ... $mIsPaperTask")
                 //进入详情页
-
+        toast("进入文章详情")
         mStopFlag = false
         mSingleThreadExecutor.execute{
             Log.d(TAG, "detailLoop size 1 =" + mTaskStack.size)
@@ -433,10 +435,13 @@ class AutoClickService : AccessibilityService() {
                 Log.d(TAG, "detailLoop detail scroll... $i")
 
             }
-            Thread.sleep(2 * 1000)
             performGlobalAction(GLOBAL_ACTION_BACK)
-            mHandler.sendEmptyMessageDelayed(MSG_BACK_MAIN, 2 * 1000)
+            Thread.sleep(2 * 1000)
+            mHandler.sendEmptyMessage(MSG_BACK_MAIN)
             Log.d(TAG, "detailLoop GLOBAL_ACTION_BACK ....  ")
+            launch (UI){
+                toast("返回主页")
+            }
         }
     }
 

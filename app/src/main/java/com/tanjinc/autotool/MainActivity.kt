@@ -39,6 +39,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
         switchAllTaskBtn.setOnCheckedChangeListener { _, isChecked ->
             SharePreferenceUtil.putBoolean(Constants.ALL_TASK, isChecked)
+            Toast.makeText(this,  if (isChecked) "取消任务" else "打开任务", Toast.LENGTH_SHORT).show()
         }
 
     }

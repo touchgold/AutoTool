@@ -84,7 +84,7 @@ class AccessibilityUtil {
         }
 
 
-         fun findByClassName(rootNodeInfo: AccessibilityNodeInfo?, text: String) : AccessibilityNodeInfo?{
+         fun findByClassName(rootNodeInfo: AccessibilityNodeInfo?, text: String, scrollable: Boolean = true) : AccessibilityNodeInfo?{
             if (rootNodeInfo == null) {
                 return null
             }
@@ -94,12 +94,22 @@ class AccessibilityUtil {
                 for (i in 0 until rootNodeInfo.childCount) {
                     var nodeI = rootNodeInfo.getChild(i)
                     if (nodeI != null) {
-                        if (nodeI.className != null && nodeI.className.contains(text)) {
-                            Log.d(TAG, " findByClassName className= " + nodeI.className)
-                            targetNodeInf = nodeI
-                            break
-                        } else {
-                            targetNodeInf = findByClassName(nodeI, text)
+                        if (nodeI.className == null) {
+                            targetNodeInf = findByClassName(nodeI, text, scrollable)
+                        } else if (nodeI.className.contains(text)){
+                            if (scrollable) {
+                                if (nodeI.isScrollable){
+                                    Log.d(TAG, " findByClassName scrollable className= " + nodeI.className)
+                                    targetNodeInf = nodeI
+                                    break
+                                } else {
+                                    targetNodeInf = findByClassName(nodeI, text, scrollable)
+                                }
+                            } else {
+                                Log.d(TAG, " findByClassName className= " + nodeI.className)
+                                targetNodeInf = nodeI
+                                break
+                            }
                         }
                     }
                     if (targetNodeInf != null) {
