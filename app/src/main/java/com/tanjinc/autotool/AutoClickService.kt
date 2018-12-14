@@ -18,7 +18,7 @@ import com.tanjinc.autotool.utils.AccessibilityUtil.Companion.clickById
 import com.tanjinc.autotool.utils.AccessibilityUtil.Companion.clickByNode
 import com.tanjinc.autotool.utils.AccessibilityUtil.Companion.clickByText
 import com.tanjinc.autotool.utils.AccessibilityUtil.Companion.findByText
-import com.tanjinc.autotool.utils.AccessibilityUtil.Companion.findByViewName
+import com.tanjinc.autotool.utils.AccessibilityUtil.Companion.findByClassName
 import com.tanjinc.autotool.utils.AccessibilityUtil.Companion.findTextArray
 import com.tanjinc.autotool.utils.PrintUtils
 import com.tanjinc.autotool.utils.ProcessUtils
@@ -81,7 +81,7 @@ class AutoClickService : AccessibilityService() {
                 }
                 MSG_SCROLL -> {
                     if (mWebViewNode == null ) {
-                        mWebViewNode = findByViewName(rootInActiveWindow, "android.webkit.WebView")
+                        mWebViewNode = findByClassName(rootInActiveWindow, "android.webkit.WebView")
                     }
                     mWebViewNode?.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
                     sendEmptyMessageDelayed(MSG_SCROLL, Random().nextInt(5) * 1000L)
@@ -101,7 +101,7 @@ class AutoClickService : AccessibilityService() {
                         mainPage()
                         return
                     }
-                    val recyclerNode = findByViewName(rootInActiveWindow, "android.support.v7.widget.RecyclerView")
+                    val recyclerNode = findByClassName(rootInActiveWindow, "android.support.v7.widget.RecyclerView")
                     if (recyclerNode != null && recyclerNode.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)) {
                         Log.d(TAG, "mainPage scroll success")
                         Log.d(TAG, "mainPage enter 2")
@@ -164,6 +164,10 @@ class AutoClickService : AccessibilityService() {
         if(event == null || rootInActiveWindow == null) {
             return
         }
+        if (SharePreferenceUtil.getBoolean(Constants.ALL_TASK)) {
+            return
+        }
+
         mRootViewNode = rootInActiveWindow
         if (SharePreferenceUtil.getBoolean(Constants.SHIWAN_TASK)) {
             InstallDialogHelper.autoInstall(this, mRootViewNode, event)
@@ -236,7 +240,7 @@ class AutoClickService : AccessibilityService() {
 //                                findByText(rootInActiveWindow, "打开", "null", true)?.performAction(AccessibilityNodeInfo.ACTION_CLICK)
 //                            }
 //
-//                            val webNodeInfo = findByViewName(rootInActiveWindow, "android.webkit.WebView")
+//                            val webNodeInfo = findByClassName(rootInActiveWindow, "android.webkit.WebView")
 //                            if (webNodeInfo!= null && webNodeInfo.isScrollable && !mIsScrollIng) {
 //                                launch {
 //
@@ -279,7 +283,7 @@ class AutoClickService : AccessibilityService() {
                                     performGlobalAction(GLOBAL_ACTION_RECENTS)
                                 }
                             } else {
-                                var scrollView = findByViewName(rootInActiveWindow, "android.widget.ListView")
+                                var scrollView = findByClassName(rootInActiveWindow, "android.widget.ListView")
                                 scrollView?.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
                             }
                         }
@@ -424,7 +428,7 @@ class AutoClickService : AccessibilityService() {
                     Log.d(TAG, "detailLoop stopSelf")
                     stopSelf()
                 }
-                mWebViewNode = findByViewName(rootInActiveWindow, "android.webkit.WebView")
+                mWebViewNode = findByClassName(rootInActiveWindow, "android.webkit.WebView")
                 mWebViewNode?.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
                 Log.d(TAG, "detailLoop detail scroll... $i")
 
@@ -440,7 +444,7 @@ class AutoClickService : AccessibilityService() {
 //        var ret = clickByText(rootInActiveWindow,"刷新")
 //        Log.d(TAG, "刷新数据! $ret")
 //        mLoading = false
-        val rececylerViewNode = findByViewName(rootInActiveWindow, "android.support.v7.widget.RecyclerView")
+        val rececylerViewNode = findByClassName(rootInActiveWindow, "android.support.v7.widget.RecyclerView")
         rececylerViewNode?.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
     }
 

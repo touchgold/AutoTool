@@ -16,7 +16,7 @@ import kotlinx.coroutines.experimental.launch
 import java.lang.Exception
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     private val TAG = "MainActivity"
     val REQUEST_MEDIA_PROJECTION = 18
@@ -37,60 +37,63 @@ class MainActivity : AppCompatActivity() {
             PermissionUtil.openAccessibility(this, sAccessibilityServiceName)
         }
 
-        startBtn.setOnClickListener {
-            PermissionUtil.openAccessibility(this, AutoClickService::class.java.name)
-//            requestPermission()
-//            startService((Intent(this, WorkService::class.java)))
+        switchAllTaskBtn.setOnCheckedChangeListener { _, isChecked ->
+            SharePreferenceUtil.putBoolean(Constants.ALL_TASK, isChecked)
+        }
+
+    }
+
+
+    override fun onClick(v: View?) {
+        when(v) {
+            qiandaoBtn -> {
+                if (checkAccessibilityPermission()) {
+                    cleanTask()
+                    SharePreferenceUtil.putBoolean(Constants.QIANDAO_TASK, true)
+                    startQuToutiao()
+                }
+            }
+            readPaperBtn -> {
+                if (checkAccessibilityPermission()) {
+                    cleanTask()
+                    SharePreferenceUtil.putBoolean(Constants.PAPER_TASK, true)
+                    startQuToutiao()
+                }
+            }
+            videoBtn -> {
+                if (checkAccessibilityPermission()) {
+                    cleanTask()
+                    SharePreferenceUtil.putBoolean(Constants.VIDEO_TASK, true)
+                    startQuToutiao()
+                }
+            }
+            shiwanBtn -> {
+                if (checkAccessibilityPermission()) {
+                    cleanTask()
+                    SharePreferenceUtil.putBoolean(Constants.SHIWAN_TASK, true)
+                    startQuToutiao()
+                }
+            }
+            startBtn -> {
+                PermissionUtil.openAccessibility(this, AutoClickService::class.java.name)
+            }
+            testBtn -> {
+                startBackground()
 //            startQuToutiao()
-//            sendBroadcast(Intent("StartWork"))
-        }
-
-        settingBtn.setOnClickListener {
-            PermissionUtil.openAccessibility(this, sAccessibilityServiceName)
-        }
-
-        testBtn.setOnClickListener {
-//            startBackground()
-            startQuToutiao()
 //            val isEnable = PermissionUtil.isNotificationEnabled(this)
 //            Toast.makeText(this, if(isEnable) "enable" else "not enable", Toast.LENGTH_SHORT).show()
-        }
-        qiandaoBtn.setOnClickListener {
-            if (checkAccesibilityPermission()) {
-                cleanTask()
-                SharePreferenceUtil.putBoolean(Constants.QIANDAO_TASK, true)
+            }
+            settingBtn -> {
+                PermissionUtil.openAccessibility(this, sAccessibilityServiceName)
+            }
+            flowBtn -> {
+                SharePreferenceUtil.putBoolean(Constants.FLOW_TASK, true)
                 startQuToutiao()
             }
-        }
-        readPaperBtn.setOnClickListener {
-            if (checkAccesibilityPermission()) {
+            cancelBtn -> {
                 cleanTask()
-                SharePreferenceUtil.putBoolean(Constants.PAPER_TASK, true)
-                startQuToutiao()
             }
         }
-        cancelBtn.setOnClickListener {
-            cleanTask()
-        }
-
-        shiwanBtn.setOnClickListener {
-            if (checkAccesibilityPermission()) {
-                cleanTask()
-                SharePreferenceUtil.putBoolean(Constants.SHIWAN_TASK, true)
-                startQuToutiao()
-            }
-        }
-        videoBtn.setOnClickListener {
-            if (checkAccesibilityPermission()) {
-                cleanTask()
-                SharePreferenceUtil.putBoolean(Constants.VIDEO_TASK, true)
-                startQuToutiao()
-            }
-        }
-        yaoqingmaTv.setOnClickListener {
-
-        }
-
     }
 
     override fun onDestroy() {
@@ -99,7 +102,8 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    private fun checkAccesibilityPermission() : Boolean {
+
+    private fun checkAccessibilityPermission() : Boolean {
         if (!mIsPermissionGain) {
             Toast.makeText(this, "没有开启辅助功能权限，请打开", Toast.LENGTH_SHORT).show()
         }
@@ -114,7 +118,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startQuToutiao() {
-        if (!checkAccesibilityPermission()) {
+        if (!checkAccessibilityPermission()) {
             return
         }
         Log.d(TAG, "startQuToutiao")
@@ -143,6 +147,7 @@ class MainActivity : AppCompatActivity() {
         }
 
     }
+
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
