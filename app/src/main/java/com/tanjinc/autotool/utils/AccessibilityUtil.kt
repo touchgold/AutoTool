@@ -3,7 +3,6 @@ package com.tanjinc.autotool.utils
 import android.text.TextUtils
 import android.util.Log
 import android.view.accessibility.AccessibilityNodeInfo
-import com.tanjinc.autotool.AutoClickService
 import java.lang.Exception
 
 /**
@@ -85,7 +84,7 @@ class AccessibilityUtil {
         }
 
 
-         fun findByViewName(rootNodeInfo: AccessibilityNodeInfo?, text: String) : AccessibilityNodeInfo?{
+         fun findByClassName(rootNodeInfo: AccessibilityNodeInfo?, text: String, scrollable: Boolean = true) : AccessibilityNodeInfo?{
             if (rootNodeInfo == null) {
                 return null
             }
@@ -95,12 +94,22 @@ class AccessibilityUtil {
                 for (i in 0 until rootNodeInfo.childCount) {
                     var nodeI = rootNodeInfo.getChild(i)
                     if (nodeI != null) {
-                        if (nodeI.className != null && nodeI.className.contains(text) && nodeI.isScrollable) {
-                            Log.d(TAG, " findByViewName className= " + nodeI.className)
-                            targetNodeInf = nodeI
-                            break
-                        } else {
-                            targetNodeInf = findByViewName(nodeI, text)
+                        if (nodeI.className == null) {
+                            targetNodeInf = findByClassName(nodeI, text, scrollable)
+                        } else if (nodeI.className.contains(text)){
+                            if (scrollable) {
+                                if (nodeI.isScrollable){
+                                    Log.d(TAG, " findByClassName scrollable className= " + nodeI.className)
+                                    targetNodeInf = nodeI
+                                    break
+                                } else {
+                                    targetNodeInf = findByClassName(nodeI, text, scrollable)
+                                }
+                            } else {
+                                Log.d(TAG, " findByClassName className= " + nodeI.className)
+                                targetNodeInf = nodeI
+                                break
+                            }
                         }
                     }
                     if (targetNodeInf != null) {
@@ -120,7 +129,7 @@ class AccessibilityUtil {
             }
 
             for (i in 0 until rootNodeInfo.childCount) {
-                var nodeI = rootNodeInfo.getChild(rootNodeInfo.childCount - 1- i)
+                var nodeI = rootNodeInfo.getChild(i)
                 if (nodeI == null) {
                     continue
                 }
@@ -180,7 +189,7 @@ class AccessibilityUtil {
             if (rootNodeInfo == null) {
                 return null
             }
-            val regex = Regex("置顶")
+            val regex = Regex(text)
 
             var targetNodeInf:AccessibilityNodeInfo ?= null
             try {
@@ -190,10 +199,11 @@ class AccessibilityUtil {
                     if (nodeI != null) {
                         if (strict) {
                             if (nodeI.text != null && nodeI.text.matches(regex)) {
+                                Log.d(TAG, "findByText success $text")
                                 targetNodeInf = nodeI
                                 break
                             } else {
-                                targetNodeInf = findByText(nodeI, text, excText)
+                                targetNodeInf = findByText(nodeI, text, excText, strict = true)
                             }
                         } else {
                             if (nodeI.text != null && nodeI.text.contains(text) && !nodeI.text.contains(excText)) {

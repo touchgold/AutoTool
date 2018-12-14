@@ -29,7 +29,7 @@ class InstallDialogHelper {
 
         var mTaskList = mutableListOf<TaskBean>()
 
-        fun reset() {
+        private fun reset() {
             mTaskList.clear()
             mTaskList.add(TaskBean("1", "com.jifen.qukan", "立即试玩/打开试玩/打开注册并试玩/打开使用", false, 3 * 60 * 1000))
             mTaskList.add(TaskBean("2", "com.android.packageinstaller", "继续", false, 3*1000))

@@ -2,12 +2,9 @@ package com.tanjinc.autotool
 
 import android.util.Log
 import android.view.accessibility.AccessibilityNodeInfo
-import com.tanjinc.autotool.utils.AccessibilityUtil.Companion.clickById
-import com.tanjinc.autotool.utils.AccessibilityUtil.Companion.clickByNode
-import com.tanjinc.autotool.utils.AccessibilityUtil.Companion.clickByText
 import com.tanjinc.autotool.utils.AccessibilityUtil.Companion.findByText
-import com.tanjinc.autotool.utils.AccessibilityUtil.Companion.findByViewName
-import com.tanjinc.autotool.utils.AccessibilityUtil.Companion.findTextArray
+import com.tanjinc.autotool.utils.AccessibilityUtil.Companion.findByClassName
+
 /**
  * Author by tanjincheng, Date on 18-12-3.
  * 魅族新闻资讯
@@ -18,7 +15,7 @@ class NewsHelper  {
         var mWebViewNodeInfo : AccessibilityNodeInfo ?= null
         var mIsScrolling = false
         fun autoWork(rootNodeInfo: AccessibilityNodeInfo) {
-            val webViewNode = findByViewName(rootNodeInfo, "android.webkit.WebView")
+            val webViewNode = findByClassName(rootNodeInfo, "android.webkit.WebView")
 
             if (mWebViewNodeInfo == null) {
                 mWebViewNodeInfo = webViewNode

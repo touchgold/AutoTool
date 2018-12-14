@@ -30,6 +30,7 @@
             android:background="@drawable/btn_bg"
             android:textColor="#FFF"
             android:layout_margin="5dp"
+            android:onClick="onClick"
             android:text="自动看小视频"/>
         <Button
             android:id="@+id/startBtn"
@@ -39,6 +40,7 @@
             android:textColor="#FFF"
             android:layout_margin="5dp"
             android:visibility="gone"
+            android:onClick="onClick"
             android:text="click"/>
 
         <Button
@@ -49,6 +51,7 @@
             android:background="@drawable/btn_bg"
             android:textColor="#FFF"
             android:layout_margin="5dp"
+            android:onClick="onClick"
             android:visibility="gone"
             android:text="设置权限"/>
         <Button
@@ -58,7 +61,8 @@
             android:background="@drawable/btn_bg"
             android:textColor="#FFF"
             android:layout_margin="5dp"
-
+            android:onClick="onClick"
+            android:visibility="gone"
             android:text="签到任务"/>
         <Button
             android:id="@+id/shiwanBtn"
@@ -67,7 +71,8 @@
             android:background="@drawable/btn_bg"
             android:textColor="#FFF"
             android:layout_margin="5dp"
-
+            android:onClick="onClick"
+            android:visibility="gone"
             android:text="试玩任务"/>
 
         <Button
@@ -77,16 +82,20 @@
             android:background="@drawable/btn_bg"
             android:textColor="#FFF"
             android:layout_margin="5dp"
+            android:onClick="onClick"
             android:text="看文章"/>
+
         <Button
-            android:id="@+id/cancelBtn"
+            android:id="@+id/flowBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/btn_bg"
             android:textColor="#FFF"
             android:layout_margin="5dp"
-
-            android:text="取消任务"/>
+            android:onClick="onClick"
+            android:visibility="gone"
+            android:text="关注"
+            />
 
         <Button
             android:id="@+id/testBtn"
@@ -95,9 +104,35 @@
             android:background="@drawable/btn_bg2"
             android:textColor="#FFF"
             android:layout_margin="5dp"
-            android:visibility="visible"
+            android:visibility="gone"
+            android:onClick="onClick"
             android:text="设置允许后台"/>
 
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <Button
+                android:id="@+id/cancelBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/btn_bg"
+                android:textColor="#FFF"
+                android:layout_margin="5dp"
+                android:onClick="onClick"
+                android:text="取消任务"/>
+            <Switch
+                android:id="@+id/switchAllTaskBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="11dp"
+                android:textOn="on"
+                android:textOff="off"
+                android:gravity="end" />
+        </RelativeLayout>
         <TextView
             android:id="@+id/tip"
             android:layout_width="wrap_content"

@@ -9,5 +9,8 @@ class Constants {
         const val SHIWAN_TASK = "shiwan_task"
         const val VIDEO_TASK = "video_task"
         const val PAPER_TASK = "paper_task"
+        const val ALL_TASK = "all_task"
+        const val FLOW_TASK = "flow_task"
+        const val FLOW_SUCCESS = "flow_success" //关注成功
     }
 }
