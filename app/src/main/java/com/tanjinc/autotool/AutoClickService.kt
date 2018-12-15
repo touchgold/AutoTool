@@ -57,10 +57,8 @@ class AutoClickService : AccessibilityService() {
     private var mWebViewNode: AccessibilityNodeInfo ?= null
     private var mRootViewNode: AccessibilityNodeInfo ?= null
 
-    private var mFirstPackageName:String ?= null
     private var mRetryCount = 0
     private var mIsShowResent = false
-    private var mIsInToutiaoProcess = false
     private val mHandler = @SuppressLint("HandlerLeak")
     object : Handler() {
         override fun handleMessage(msg: Message) {
@@ -90,11 +88,6 @@ class AutoClickService : AccessibilityService() {
                     Log.d(TAG, "scroll ...")
                 }
                 MSG_BACK_MAIN -> {
-                    if (!mIsInToutiaoProcess) {
-                        removeCallbacksAndMessages(null)
-                        mRetryCount = 0
-                        return
-                    }
                     if (mTaskStack.size > 0) {
                         Log.d(TAG, "mainPage enter 1")
                         mIsPaperTask = false
@@ -167,6 +160,7 @@ class AutoClickService : AccessibilityService() {
             return
         }
         if (SharePreferenceUtil.getBoolean(Constants.ALL_TASK)) {
+            mHandler.removeCallbacksAndMessages(null)
             return
         }
 
@@ -175,15 +169,6 @@ class AutoClickService : AccessibilityService() {
             InstallDialogHelper.autoInstall(this, mRootViewNode, event)
         }
 
-        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-            if (event.packageName != "com.jifen.qukan" && mFirstPackageName == "com.jifen.qukan") {
-                mHandler.removeCallbacksAndMessages(null)
-                mStopFlag = true
-                mIsPaperTask = false
-            }
-            mIsInToutiaoProcess = (event.packageName == "com.jifen.qukan")
-            mFirstPackageName = event.packageName.toString()
-        }
         when(event.packageName) {
             QutoutiaoPackage -> {
                 //读取通知栏
@@ -236,31 +221,7 @@ class AutoClickService : AccessibilityService() {
                             clickByText(rootInActiveWindow,"进行中...")
 //                            InstallDialogHelper.reset()
                             InstallDialogHelper.autoInstall(this, rootInActiveWindow, event)
-//                            clickByText(rootInActiveWindow,"立即试玩")
-//                            installTask()
-//                            if (!clickByText(rootInActiveWindow,"领取奖励")) {
-//                                findByText(rootInActiveWindow, "打开", "null", true)?.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-//                            }
-//
-//                            val webNodeInfo = findByClassName(rootInActiveWindow, "android.webkit.WebView")
-//                            if (webNodeInfo!= null && webNodeInfo.isScrollable && !mIsScrollIng) {
-//                                launch {
-//
-//                                    mIsScrollIng = true
-//                                    var i = 0
-//                                    while ( i < 5) {
-//                                        webNodeInfo.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
-//                                        delay(Random().nextInt(10) * 1000)
-//                                        i++
-//                                    }
-//
-//                                    performGlobalAction(GLOBAL_ACTION_BACK)
-//                                    mIsScrollIng = false
-//                                }
-//                            }
                         }
-
-
 
                         if (SharePreferenceUtil.getBoolean(Constants.QIANDAO_TASK)) {
                             recommendAppTask()
@@ -435,9 +396,10 @@ class AutoClickService : AccessibilityService() {
                 Log.d(TAG, "detailLoop detail scroll... $i")
 
             }
-            performGlobalAction(GLOBAL_ACTION_BACK)
+
             Thread.sleep(2 * 1000)
-            mHandler.sendEmptyMessage(MSG_BACK_MAIN)
+            performGlobalAction(GLOBAL_ACTION_BACK)
+            mHandler.sendEmptyMessageDelayed(MSG_BACK_MAIN, 2 * 1000)
             Log.d(TAG, "detailLoop GLOBAL_ACTION_BACK ....  ")
             launch (UI){
                 toast("返回主页")
