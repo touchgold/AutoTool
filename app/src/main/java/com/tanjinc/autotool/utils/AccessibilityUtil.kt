@@ -110,6 +110,8 @@ class AccessibilityUtil {
                                 targetNodeInf = nodeI
                                 break
                             }
+                        } else {
+                            targetNodeInf = findByClassName(nodeI, text, scrollable)
                         }
                     }
                     if (targetNodeInf != null) {
