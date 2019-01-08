@@ -36,6 +36,8 @@ class AutoClickService : AccessibilityService() {
         val QutoutiaoPackage = "com.jifen.qukan" //趣头条包名
         val NewsPackageName = "com.meizu.media.reader" // 资讯
         val mTargetPackageName = "com.tanjinc.autotool"
+        val MiZhuanPackage = "me.mizhuan"
+        val MiTouTiaoPackage = "me.toutiaoapp"
     }
     private lateinit var mBrocardReceiver:MyBroadcastReceiver
     private var mClickGetCoin:Boolean = false
@@ -170,6 +172,7 @@ class AutoClickService : AccessibilityService() {
         }
 
         when(event.packageName) {
+
             QutoutiaoPackage -> {
                 //读取通知栏
                 if(mIsNotificationTask) {
@@ -260,6 +263,8 @@ class AutoClickService : AccessibilityService() {
                     }
                 }
 
+                QttHelper.autoWork(this, rootInActiveWindow, event)
+
                 rootInActiveWindow?.recycle()
             }
             "com.android.packageinstaller" ->  installTask()
@@ -275,6 +280,12 @@ class AutoClickService : AccessibilityService() {
                 NewsHelper.autoWork(rootInActiveWindow)
             }
 
+            MiTouTiaoPackage -> {
+                MiZhuanHelper.autoWork(this, rootInActiveWindow, event)
+            }
+            MiZhuanPackage -> {
+                MiZhuanHelper.autoWork(this, rootInActiveWindow, event)
+            }
             else -> {
                 if (mIsInstalling) {
                     val currentPackageName = ProcessUtils.getTopActivityPackageName(MyApplication.getApplication())

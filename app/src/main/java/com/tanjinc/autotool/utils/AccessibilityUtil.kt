@@ -4,6 +4,10 @@ import android.text.TextUtils
 import android.util.Log
 import android.view.accessibility.AccessibilityNodeInfo
 import java.lang.Exception
+import android.os.Bundle
+import android.os.Build
+
+
 
 /**
  * Author by tanjincheng, Date on 18-12-4.
@@ -84,6 +88,30 @@ class AccessibilityUtil {
         }
 
 
+        fun findByClassName(rootNodeInfo: AccessibilityNodeInfo?, className:String, retArray:MutableList<AccessibilityNodeInfo>){
+
+            if (rootNodeInfo == null) {
+                return
+            }
+            var targetNodeInf:AccessibilityNodeInfo ?= null
+
+            for (i in 0 until rootNodeInfo.childCount) {
+                var nodeI = rootNodeInfo.getChild(i)
+                if (nodeI != null) {
+                    if (nodeI.className == null) {
+                        findByClassName(nodeI, className, retArray)
+                    } else if (nodeI.className.contains(className)){
+                        Log.d(TAG, " findByClassName className= " + nodeI.className)
+                        targetNodeInf = nodeI
+                        retArray.add(targetNodeInf)
+                    } else {
+                        findByClassName(nodeI, className, retArray)
+                    }
+                }
+            }
+
+        }
+
          fun findByClassName(rootNodeInfo: AccessibilityNodeInfo?, text: String, scrollable: Boolean = true) : AccessibilityNodeInfo?{
             if (rootNodeInfo == null) {
                 return null
@@ -154,6 +182,19 @@ class AccessibilityUtil {
                         }
                     }
                 }
+            }
+        }
+
+
+        fun inputText(nodeInfo: AccessibilityNodeInfo?, txt: String) {
+            if (nodeInfo == null) {
+                return
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                val arguments = Bundle()
+                arguments.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, txt)
+                nodeInfo.performAction(AccessibilityNodeInfo.ACTION_FOCUS)
+                nodeInfo.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)
             }
         }
 
