@@ -9,10 +9,12 @@ import android.util.Log
 import kotlinx.android.synthetic.main.activity_main.*
 import android.view.View
 import android.widget.Toast
+import com.tanjinc.autotool.utils.AppUtils
 import com.tanjinc.autotool.utils.PermissionUtil
 import com.tanjinc.autotool.utils.SharePreferenceUtil
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.lang.Exception
 
 
@@ -37,11 +39,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             PermissionUtil.openAccessibility(this, sAccessibilityServiceName)
         }
 
+        SharePreferenceUtil.putBoolean(Constants.ALL_TASK, false)
         switchAllTaskBtn.setOnCheckedChangeListener { _, isChecked ->
             SharePreferenceUtil.putBoolean(Constants.ALL_TASK, isChecked)
             Toast.makeText(this,  if (isChecked) "取消任务" else "打开任务", Toast.LENGTH_SHORT).show()
         }
 
+        yaoqingmaTv.text = "趣头条邀请码: $QTT_CODE"
+        miCodeTv.text = "米赚邀请码: $MIZHUAN_CODE"
     }
 
 
@@ -54,17 +59,17 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     startQuToutiao()
                 }
             }
-            readPaperBtn -> {
+            dfttIcon -> {
                 if (checkAccessibilityPermission()) {
                     cleanTask()
                     SharePreferenceUtil.putBoolean(Constants.PAPER_TASK, true)
-                    startQuToutiao()
+                    startDongFangTT()
                 }
             }
-            videoBtn -> {
+            qttIcon -> {
                 if (checkAccessibilityPermission()) {
                     cleanTask()
-                    SharePreferenceUtil.putBoolean(Constants.VIDEO_TASK, true)
+                    SharePreferenceUtil.putBoolean(Constants.PAPER_TASK, true)
                     startQuToutiao()
                 }
             }
@@ -75,24 +80,32 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     startQuToutiao()
                 }
             }
-            startBtn -> {
-                PermissionUtil.openAccessibility(this, AutoClickService::class.java.name)
-            }
             testBtn -> {
                 startBackground()
-//            startQuToutiao()
-//            val isEnable = PermissionUtil.isNotificationEnabled(this)
-//            Toast.makeText(this, if(isEnable) "enable" else "not enable", Toast.LENGTH_SHORT).show()
             }
             settingBtn -> {
                 PermissionUtil.openAccessibility(this, sAccessibilityServiceName)
             }
             flowBtn -> {
+                cleanTask()
                 SharePreferenceUtil.putBoolean(Constants.FLOW_TASK, true)
                 startQuToutiao()
             }
-            cancelBtn -> {
+            mizhuanIcon -> {
                 cleanTask()
+                startMiZhuan()
+            }
+            miCodeTv -> {
+                copyText(MIZHUAN_CODE)
+                toastShort("米赚邀请码已复制")
+            }
+            yaoqingmaTv -> {
+                copyText(QTT_CODE)
+                toastShort("趣头条邀请码已复制")
+            }
+            dongfangCodeTv -> {
+                copyText(DONGFANG_CODE)
+                toastShort("东方头条邀请码已复制")
             }
         }
     }
@@ -115,10 +128,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         SharePreferenceUtil.putBoolean(Constants.QIANDAO_TASK, false)
         SharePreferenceUtil.putBoolean(Constants.VIDEO_TASK, false)
         SharePreferenceUtil.putBoolean(Constants.PAPER_TASK, false)
+        SharePreferenceUtil.putBoolean(Constants.FLOW_TASK, false)
 
     }
 
     private fun startQuToutiao() {
+        if (!AppUtils.isAvilible(this, "com.jifen.qukan")) {
+            toastShort("趣头条未安装")
+            return
+        }
         if (!checkAccessibilityPermission()) {
             return
         }
@@ -126,6 +144,30 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         val intent = Intent()
         intent.setClassName("com.jifen.qukan", "com.jifen.qkbase.main.MainActivity")
         startActivity(intent)
+    }
+
+    private fun startMiZhuan() {
+        if (!AppUtils.isAvilible(this, AutoClickService.MiZhuanPackage)) {
+            toastShort("米赚未安装")
+            return
+        }
+        if (!checkAccessibilityPermission()) {
+            return
+        }
+        Log.d(TAG, "startMiZhuan")
+        startActivity(packageManager.getLaunchIntentForPackage("me.mizhuan"));
+    }
+
+    private fun startDongFangTT() {
+        if (!AppUtils.isAvilible(this, AutoClickService.DongFangTTPackage)) {
+            toastShort("东方头条 未安装")
+            return
+        }
+        if (!checkAccessibilityPermission()) {
+            return
+        }
+        Log.d(TAG, "startMiZhuan")
+        startActivity(packageManager.getLaunchIntentForPackage("com.songheng.eastnews"))
     }
 
     private fun requestPermission() {
@@ -138,9 +180,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onResume() {
         super.onResume()
-        launch {
+        GlobalScope.launch {
             mIsPermissionGain = PermissionUtil.isAccessibilitySettingsOn(mActivity, sAccessibilityServiceName)
-            launch(UI) {
+            launch(Main) {
                 permissionWarmTv.visibility = if (mIsPermissionGain) View.GONE else View.VISIBLE
             }
 
@@ -182,7 +224,20 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
+    private fun copyText(copyStr:String) {
+        val clipData = ClipData.newPlainText("text", copyStr)
+        val clipManager: ClipboardManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipManager.primaryClip = clipData
+    }
+
+    private fun Context.toastShort(message:String) =
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+
+
     companion object {
         const val MSG_START_QUTOUTIAO = "start_activity"
+        const val QTT_CODE = "A220137685"
+        const val MIZHUAN_CODE = "300362641"
+        const val DONGFANG_CODE = "028514563"
     }
 }

@@ -7,8 +7,6 @@ import com.tanjinc.autotool.utils.AccessibilityUtil
 import android.os.Bundle
 import android.util.Log
 import com.tanjinc.autotool.utils.SharePreferenceUtil
-import kotlinx.coroutines.experimental.delay
-import kotlinx.coroutines.experimental.launch
 
 
 /**

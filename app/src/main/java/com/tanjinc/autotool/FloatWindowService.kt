@@ -17,7 +17,8 @@ import android.os.SystemClock.sleep
 import android.util.Log
 import android.util.DisplayMetrics
 import android.view.WindowManager
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 
 /**
@@ -48,7 +49,7 @@ class FloatWindowsService : Service() {
 
         virtualDisplay()
 
-        launch {
+        GlobalScope.launch {
             while (true) {
                 startCapture()
                 sleep(1000)

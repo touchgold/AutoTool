@@ -1,7 +1,6 @@
 package com.tanjinc.autotool
 
 import android.accessibilityservice.AccessibilityService
-import android.graphics.Rect
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
@@ -10,19 +9,20 @@ import com.tanjinc.autotool.utils.AccessibilityUtil
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.*
-import kotlin.math.abs
 
-//米赚助手
-object MiZhuanHelper {
+/**
+ * Author by tanjincheng, Date on 19-1-10.
+ */
+object RttHelper  {
 
+    //com.expflow.reading/com.expflow.reading.activity.PopMessageActivity
 
-    const val TAG = "MiZhuanHelper"
+    const val TAG = "RttHelper"
     const val SCROLL_DELAY = 5 * 1000L
     private var mIsInDetail = false
     private var mIsPaperTask = false
     private var mRefresh = false
-//    private var mTaskStack: Stack<AccessibilityNodeInfo> = Stack()
+    //    private var mTaskStack: Stack<AccessibilityNodeInfo> = Stack()
     private var mTargetNodeArray = mutableListOf<AccessibilityNodeInfo>()
     private var mCurrentIndex = 0
 

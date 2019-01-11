@@ -66,10 +66,10 @@ fun main(args: Array<String>) {
         print("$it")
     }
 
-    val regex = Regex("[0-9]+评")
-    val regex2 = Regex("视频")
-    val str1 = "你怎么评价这几位主演呢？欢迎在下方评论留言！"
-    val str2 = "视频"
+    val regex = Regex("[0-9]aaa评$")
+    val regex2 = Regex("[\\s\\S]*前$")
+    val str1 = "1评"
+    val str2 = "1xfdafd前"
     print(str1.contains(regex))
     print("\n")
     print(str2.matches(regex2))

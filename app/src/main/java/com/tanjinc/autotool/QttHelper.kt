@@ -7,17 +7,20 @@ import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import com.tanjinc.autotool.utils.AccessibilityUtil
 import com.tanjinc.autotool.utils.SharePreferenceUtil
-import kotlinx.coroutines.experimental.delay
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.*
 
 object QttHelper {
 
     const val TAG = "QttHelper"
+    const val WAIT_TIME = 15 * 1000
     private var mIsComment:Boolean = false //评论
     private var mIsCollect:Boolean = false //收藏
     private var mIsShare:Boolean = false //分享
     private var mIsShareSuccess = false //分享成功
+
 
     private var randomText = mutableListOf<String>(
             "很好，试试看",
@@ -36,13 +39,21 @@ object QttHelper {
                 //评论
                 AccessibilityUtil.clickByText(rootNode, "我来说两句...")
                 val editNode = AccessibilityUtil.findByClassName(rootNode, "android.widget.EditText", false)
-                AccessibilityUtil.inputText(editNode, commentText)
-                //防止评论过快
-                if (System.currentTimeMillis() - SharePreferenceUtil.getLong(Constants.LAST_COMMENT_TIME) < 15 * 1000) {
-                    return
+                val sendNode = AccessibilityUtil.findByText(rootNode, "发送", strict = true)
+                if (editNode != null && sendNode != null) {
+                    //防止评论过快
+                    val waitTime = System.currentTimeMillis() - SharePreferenceUtil.getLong(Constants.LAST_COMMENT_TIME)
+                    if (waitTime < WAIT_TIME) {
+                        AccessibilityUtil.inputText(editNode, "等待："+ ((WAIT_TIME - waitTime)/1000) + "秒")
+                        return
+                    }
+                    AccessibilityUtil.inputText(editNode, commentText)
+                    mIsComment = AccessibilityUtil.clickByNode(rootNode, sendNode)
+                    if (mIsComment) {
+                        SharePreferenceUtil.putLong(Constants.LAST_COMMENT_TIME, System.currentTimeMillis())
+                    }
                 }
-                mIsComment = AccessibilityUtil.clickByText(rootNode, "发送")
-                SharePreferenceUtil.putLong(Constants.LAST_COMMENT_TIME, System.currentTimeMillis())
+
             }
 
             if (mIsComment) {
@@ -73,7 +84,7 @@ object QttHelper {
             if (mIsComment && mIsCollect && mIsShare) {
                 if (isInDetail(rootNode)) {
                     service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK)
-                    launch {
+                    GlobalScope.launch {
                         delay(2*1000)
                         mIsComment = false
                         mIsCollect = false

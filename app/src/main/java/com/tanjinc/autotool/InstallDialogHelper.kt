@@ -8,8 +8,9 @@ import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import com.tanjinc.autotool.utils.AccessibilityUtil
 import com.tanjinc.autotool.utils.ProcessUtils
-import kotlinx.coroutines.experimental.delay
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.lang.Exception
 
 /**
@@ -79,7 +80,7 @@ class InstallDialogHelper {
                                     item.finished = AccessibilityUtil.clickByText(rootNode, btn, true)
                                     if (item.finished) {
                                         Log.d(TAG, "click success ${item.clickBtn} --> $btn")
-                                        launch {
+                                        GlobalScope.launch {
                                             delay(1*1000)
                                             val intent = Intent()
                                             intent.action = MainActivity.MSG_START_QUTOUTIAO
@@ -95,8 +96,8 @@ class InstallDialogHelper {
                             }
 
                             if (item.packName == "com.android.packageinstaller") {
-                                launch {
-                                    delay(item.delay)
+                                GlobalScope.launch {
+                                    delay(item.delay.toLong())
                                     item.finished = AccessibilityUtil.clickByText(rootNode, item.clickBtn, true)
                                 }
                             }

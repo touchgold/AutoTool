@@ -7,7 +7,5 @@ import android.content.Intent
 class AlarmReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        val i = Intent(context, WorkService::class.java)
-        context?.startService(i)
     }
 }

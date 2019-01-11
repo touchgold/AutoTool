@@ -3,6 +3,7 @@
                        android:description="@string/app_name"
                        android:accessibilityEventTypes="typeAllMask|typeViewClicked|typeViewFocused|typeNotificationStateChanged|typeWindowStateChanged"
                        android:accessibilityFlags="flagReportViewIds"
-                       android:accessibilityFeedbackType="feedbackSpoken"
-                       android:notificationTimeout="100"
+                       android:accessibilityFeedbackType="feedbackAllMask"
+                        android:canRequestEnhancedWebAccessibility="true"
+                        android:notificationTimeout="100"
                        android:canRetrieveWindowContent="true"/>
