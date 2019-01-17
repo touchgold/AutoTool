@@ -139,14 +139,15 @@
             android:layout_height="wrap_content"
             android:textSize="12sp"
             android:text="注：\n魅族手机需要在 手机管家->权限管理->后台管理->AutoTool 勾选允许后台允许. \n"/>
+
         <TextView
             android:id="@+id/yaoqingmaTv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="12dp"
+            android:text="邀请码: A252788288 "
             android:textColor="#0826e9"
             android:textIsSelectable="true"
-            android:text="邀请码: A220137685"/>
+            android:textSize="12dp" />
     </LinearLayout>
 
 
